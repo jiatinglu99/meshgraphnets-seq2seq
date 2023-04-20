@@ -185,7 +185,7 @@ class EncodeProcessDecode(snt.AbstractModule):
     h += self._make_linear(self._latent_size)(graph.lap_pos)
     for edge_set in graph.edge_sets:
         e = self._make_linear(self._latent_size)(edge_set.features)
-    for conv in self._num_layers:
+    for conv in range(self._num_layers):
        h, e = GraphTransformerLayer(self._output_size, self._latent_size, use_bias=self.bias)(h, e)
     return self._make_mlp([self._latent_size, self._latent_size, self._output_size], layer_norm=False)(h)
 
