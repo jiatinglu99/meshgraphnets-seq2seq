@@ -112,7 +112,7 @@ class GraphTransformerLayer(snt.AbstractModule):
   def _build(self, h, e):
     h1 = h
     e1 = e
-    h_att, e_att = MultiHeadAttentionLayer(self.output_size, self.latent_size, self.num_heads, self.bias)(h, e)
+    h_att, e_att = MultiHeadAttentionLayer(self.output_size, self.latent_size//self.num_heads, self.num_heads, self.bias)(h, e)
     h = tf.reshape(h_att, [-1, self.latent_size])
     e = tf.reshape(e_att, [-1, self.latent_size])
 
