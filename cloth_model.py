@@ -63,7 +63,7 @@ class Model(snt.AbstractModule):
         senders=senders)
     return core_model.MultiGraph(
         node_features=self._node_normalizer(node_features, is_training),
-        edge_sets=[mesh_edges], lap_pos=relative_mesh_pos)
+        edge_sets=[mesh_edges], lap_pos=inputs['world_pos'])
 
   def _build(self, inputs):
     graph = self._build_graph(inputs, is_training=False)
