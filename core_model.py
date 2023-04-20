@@ -129,8 +129,8 @@ class GraphTransformerLayer(snt.AbstractModule):
       e = snt.LayerNorm()(e)
     
     if self.batch_norm:
-      h = snt.BatchNorm(is_training=self.is_training)(h)
-      e = snt.BatchNorm(is_training=self.is_training)(e)
+      h = snt.BatchNorm()(h, is_training=self.is_training)
+      e = snt.BatchNorm()(e, is_training=self.is_training)
     
     h2 = h
     e2 = e
@@ -147,8 +147,8 @@ class GraphTransformerLayer(snt.AbstractModule):
       e = snt.LayerNorm()(e)
     
     if self.batch_norm:
-      h = snt.BatchNorm(is_training=self.is_training)(h)
-      e = snt.BatchNorm(is_training=self.is_training)(e)
+      h = snt.BatchNorm()(h, is_training=self.is_training)
+      e = snt.BatchNorm()(e, is_training=self.is_training)
      
     return h, e
   
