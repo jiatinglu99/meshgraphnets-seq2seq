@@ -200,6 +200,9 @@ class EncodeProcessDecode(snt.AbstractModule):
        h, e = GraphTransformerLayer(self._output_size, self._latent_size, use_bias=self.bias, is_training=self.is_training)(h, e)
        print("Iter head: " , conv, " ", h)
        print("Iter edge: " , conv, " ", e)
-    return self._make_mlp([self._latent_size, self._latent_size, self._output_size], layer_norm=False)(h)
+    print("working")
+    ret = self._make_mlp([self._latent_size, self._latent_size, self._output_size], layer_norm=False)(h)
+    print(ret)
+    return ret
 
   
