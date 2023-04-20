@@ -87,7 +87,7 @@ class MultiHeadAttentionLayer(snt.AbstractModule):
 class GraphTransformerLayer(snt.AbstractModule):
   def __init__(self, output_size, latent_size, num_heads=4, dropout=0.0, 
                 layer_norm=False, batch_norm=True, 
-                residual=True, use_bias=False, name='GraphTransformerLayer'):
+                residual=True, use_bias=False, is_training=False, name='GraphTransformerLayer'):
     super(GraphTransformerLayer, self).__init__(name=name)
     self.output_size = output_size
     self.latent_size = latent_size
@@ -97,7 +97,8 @@ class GraphTransformerLayer(snt.AbstractModule):
     self.layer_norm = layer_norm     
     self.batch_norm = batch_norm
     self.bias = use_bias
-
+    self.is_training = is_training
+    
   def _make_linear(self, out_dim):
     width = out_dim
     network = snt.Linear(width, with_bias=self.bias)
@@ -128,8 +129,8 @@ class GraphTransformerLayer(snt.AbstractModule):
       e = snt.LayerNorm()(e)
     
     if self.batch_norm:
-      h = snt.BatchNorm()(h)
-      e = snt.BatchNorm()(e)
+      h = snt.BatchNorm(is_training=self.is_training)(h)
+      e = snt.BatchNorm(is_training=self.is_training)(e)
     
     h2 = h
     e2 = e
@@ -146,8 +147,8 @@ class GraphTransformerLayer(snt.AbstractModule):
       e = snt.LayerNorm()(e)
     
     if self.batch_norm:
-      h = snt.BatchNorm()(h)
-      e = snt.BatchNorm()(e)
+      h = snt.BatchNorm(is_training=self.is_training)(h)
+      e = snt.BatchNorm(is_training=self.is_training)(e)
      
     return h, e
   
@@ -160,6 +161,7 @@ class EncodeProcessDecode(snt.AbstractModule):
                num_layers,
                message_passing_steps,
                use_bias=False,
+               is_training=False,
                name='EncodeProcessDecode'):
     super(EncodeProcessDecode, self).__init__(name=name)
     self._latent_size = latent_size
@@ -167,6 +169,7 @@ class EncodeProcessDecode(snt.AbstractModule):
     self._num_layers = num_layers
     self._message_passing_steps = message_passing_steps
     self.bias = use_bias
+    self.is_training = is_training
 
   def _make_linear(self, out_dim):
     width = out_dim
@@ -186,7 +189,7 @@ class EncodeProcessDecode(snt.AbstractModule):
     for edge_set in graph.edge_sets:
         e = self._make_linear(self._latent_size)(edge_set.features)
     for conv in range(self._num_layers):
-       h, e = GraphTransformerLayer(self._output_size, self._latent_size, use_bias=self.bias)(h, e)
+       h, e = GraphTransformerLayer(self._output_size, self._latent_size, use_bias=self.bias, is_training=self.is_training)(h, e)
     return self._make_mlp([self._latent_size, self._latent_size, self._output_size], layer_norm=False)(h)
 
   
