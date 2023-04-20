@@ -86,8 +86,9 @@ class Model(snt.AbstractModule):
 
     # build loss
     loss_mask = tf.equal(inputs['node_type'][:, 0], common.NodeType.NORMAL)
-    print("LOSS MASK ", loss_mask)
+    print("target ", target_normalized)
     error = tf.reduce_sum((target_normalized - network_output)**2, axis=1)
+    print("WORKING ERROR: ", error)
     loss = tf.reduce_mean(error[loss_mask])
     return loss
 
