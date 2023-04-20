@@ -187,7 +187,10 @@ class EncodeProcessDecode(snt.AbstractModule):
     h = self._make_linear(self._latent_size)(graph.node_features)
     h += self._make_linear(self._latent_size)(graph.lap_pos)
     for edge_set in graph.edge_sets:
+        print("BEFORE EDGE: ", tf.shape(edge_set.features))
         e = self._make_linear(self._latent_size)(edge_set.features)
+    print("HEAD SHAPE: ", tf.shape(h))
+    print("AFTER EDGE SHAPE: ", tf.shape(e))
     for conv in range(self._num_layers):
        h, e = GraphTransformerLayer(self._output_size, self._latent_size, use_bias=self.bias, is_training=self.is_training)(h, e)
     return self._make_mlp([self._latent_size, self._latent_size, self._output_size], layer_norm=False)(h)
