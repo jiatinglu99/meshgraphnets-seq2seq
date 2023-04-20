@@ -81,6 +81,8 @@ class MultiHeadAttentionLayer(snt.AbstractModule):
       
       h_out = wV / (score + tf.fill(tf.shape(score), 1e-6)) # adding eps to all values here
       
+      print("ATTENTION HEAD: ", h_out)
+      print("ATTENTION EDGE: ", e_out)
       return h_out, e_out
 
 
@@ -186,6 +188,7 @@ class EncodeProcessDecode(snt.AbstractModule):
     #h = snt.Embed(vocab_size=9, embed_dim=self._latent_size)(graph.node_features)
     h = self._make_linear(self._latent_size)(graph.node_features)
     h += self._make_linear(self._latent_size)(graph.lap_pos)
+    print("REC: ", edge_set.receivers)
     for edge_set in graph.edge_sets:
         print("BEFORE EDGE: ", edge_set.features)
         e = self._make_linear(self._latent_size)(edge_set.features)
