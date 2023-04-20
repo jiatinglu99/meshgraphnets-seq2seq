@@ -75,7 +75,8 @@ class Model(snt.AbstractModule):
     """L2 loss on position."""
     graph = self._build_graph(inputs, is_training=True)
     network_output = self._learned_model(graph)
-
+    
+    print("LOSS PRED ," network_output)
     # build target acceleration
     cur_position = inputs['world_pos']
     prev_position = inputs['prev|world_pos']
@@ -85,6 +86,7 @@ class Model(snt.AbstractModule):
 
     # build loss
     loss_mask = tf.equal(inputs['node_type'][:, 0], common.NodeType.NORMAL)
+    print("LOSS MASK ", loss_mask)
     error = tf.reduce_sum((target_normalized - network_output)**2, axis=1)
     loss = tf.reduce_mean(error[loss_mask])
     return loss
@@ -92,8 +94,10 @@ class Model(snt.AbstractModule):
   def _update(self, inputs, per_node_network_output):
     """Integrate model outputs."""
     acceleration = self._output_normalizer.inverse(per_node_network_output)
+    print("UPDATE: ", acceleration)
     # integrate forward
     cur_position = inputs['world_pos']
     prev_position = inputs['prev|world_pos']
+    print("PREV ", prev_position)
     position = 2*cur_position + acceleration - prev_position
     return position
