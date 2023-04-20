@@ -77,6 +77,8 @@ class MultiHeadAttentionLayer(snt.AbstractModule):
       v_h = tf.reshape(V_h, [-1, self.num_heads, self.latent_size])
       pro_e = tf.reshape(proj_e, [-1, self.num_heads, self.latent_size])
       
+      print("ATED EDGE " , pro_e)
+      print("ATED HE" , q_h)
       e_out, wV, score = self.propagate_attention(k_h, q_h, v_h, pro_e)
       
       h_out = wV / (score + tf.fill(tf.shape(score), 1e-6)) # adding eps to all values here
@@ -196,6 +198,8 @@ class EncodeProcessDecode(snt.AbstractModule):
     print("AFTER EDGE SHAPE: ", e)
     for conv in range(self._num_layers):
        h, e = GraphTransformerLayer(self._output_size, self._latent_size, use_bias=self.bias, is_training=self.is_training)(h, e)
+       print("Iter head: " , conv, " ", h)
+       print("Iter edge: " , conv, " ", e)
     return self._make_mlp([self._latent_size, self._latent_size, self._output_size], layer_norm=False)(h)
 
   
