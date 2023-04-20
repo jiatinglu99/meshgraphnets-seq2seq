@@ -188,9 +188,9 @@ class EncodeProcessDecode(snt.AbstractModule):
     #h = snt.Embed(vocab_size=9, embed_dim=self._latent_size)(graph.node_features)
     h = self._make_linear(self._latent_size)(graph.node_features)
     h += self._make_linear(self._latent_size)(graph.lap_pos)
-    print("REC: ", edge_set.receivers)
     for edge_set in graph.edge_sets:
         print("BEFORE EDGE: ", edge_set.features)
+        print("REC: ", edge_set.receivers)
         e = self._make_linear(self._latent_size)(edge_set.features)
     print("HEAD SHAPE: ", h)
     print("AFTER EDGE SHAPE: ", e)
