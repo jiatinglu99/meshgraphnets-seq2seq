@@ -116,8 +116,8 @@ class GraphTransformerLayer(snt.AbstractModule):
     h = tf.reshape(h_att, [-1, self.latent_size])
     e = tf.reshape(e_att, [-1, self.latent_size])
 
-    h = self._make_linear(self.output_size)(h)
-    e = self._make_linear(self.output_size)(e)
+    h = self._make_linear(self.latent_size)(h)
+    e = self._make_linear(self.latent_size)(e)
 
     if self.residual:
       h += h1
@@ -134,8 +134,8 @@ class GraphTransformerLayer(snt.AbstractModule):
     h2 = h
     e2 = e
 
-    h = self._make_mlp([self.latent_size*2, self.output_size])
-    e = self._make_mlp([self.latent_size*2, self.output_size])
+    h = self._make_mlp([self.latent_size*2, self.latent_size])
+    e = self._make_mlp([self.latent_size*2, self.latent_size])
 
     if self.residual:
       h += h2
