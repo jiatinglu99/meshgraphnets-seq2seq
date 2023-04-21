@@ -127,7 +127,7 @@ class GraphTransformerLayer(snt.AbstractModule):
     with tf.variable_scope(edge_set.name+'_edge_fn'):
       return self._make_linear(self.latent_size)(tf.concat(features, axis=-1))
 
-  def _transform_edge(self, node_features, edge_sets):
+  def _tranform_edge(self, node_features, edge_sets):
     num_nodes = tf.shape(node_features)[0]
     features = [node_features]
     for edge_set in edge_sets:
@@ -139,7 +139,7 @@ class GraphTransformerLayer(snt.AbstractModule):
   def _build(self, graph):
     h = graph.node_features
     h1 = h
-    e = self._transform_edge(graph.node_features, graph.edge_sets)
+    e = self._transform_edge(graph.node_features, graph.edge_set)
 
     h_att, e_att = MultiHeadAttentionLayer(self.output_size, self.latent_size//self.num_heads, self.num_heads, self.bias)(h, e)
     h = tf.reshape(h_att, [-1, self.latent_size])
@@ -247,7 +247,7 @@ class EncodeProcessDecode(snt.AbstractModule):
       return decoder(graph.node_features)
 
   def _build(self, graph):
-    latent_graph = self._encoder(graph)
+    latent_graph = self._econder(graph)
     print("working")
     ret = self._decoder(latent_graph)
     print(ret)
