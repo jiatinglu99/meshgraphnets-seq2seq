@@ -118,7 +118,7 @@ def main(argv):
   learned_model = core_model.EncodeProcessDecode(
       output_size=params['size'],
       latent_size=128,
-      num_layers=2,
+      num_layers=8,
       message_passing_steps=15)
   model = params['model'].Model(learned_model)
   if FLAGS.mode == 'train':

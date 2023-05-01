@@ -44,24 +44,24 @@ class MultiHeadAttentionLayer(snt.AbstractModule):
         self.bias = bias
     
   def propagate_attention(self, k_h, q_h, v_h, proj_e):
-      # Compute attention score
-      #score = tf.reduce_sum(k_h * q_h, axis=-1)
-      score = k_h * q_h
-      print(f'UNIQUE: {score}')
-      print(f'UNIQUE EDGE: {proj_e}')
-      # scaling
-      score = tf.divide(score, tf.sqrt(float(self.latent_size)))
-      # Use available edge features to modify the scores
-      print(f'VERY HE:{score}')
-      score = tf.multiply(score, proj_e)
-      # Copy edge features as e_out to be passed to FFN_e
-      print(f'WORKING VV:{score}')
-      e_out = score
-      # softmax
-      score = tf.exp(tf.clip_by_value(tf.reduce_sum(score, axis=-1, keepdims=True), -5, 5))
-      # Send weighted values to target nodes
-      wV = v_h * score
-      return e_out, wV, score
+    # Compute attention score
+    #score = tf.reduce_sum(k_h * q_h, axis=-1)
+    score = tf.multiply(k_h, q_h)
+
+    # scaling
+    score = tf.divide(score, tf.sqrt(float(self.latent_size)))
+    # Use available edge features to modify the scores
+
+    score = tf.multiply(score, proj_e)
+    # Copy edge features as e_out to be passed to FFN_e
+
+    e_out = score
+    # softmax
+    #score = tf.exp(tf.clip_by_value(tf.reduce_sum(score, axis=-1, keepdims=True), -5, 5))
+    score = tf.nn.softmax(score)
+    # Send weighted values to target nodes
+    wV = tf.multiply(score, v_h)
+    return e_out, wV, score
 
   def _make_linear(self, out_dim):
     width = out_dim * self.num_heads
@@ -80,22 +80,18 @@ class MultiHeadAttentionLayer(snt.AbstractModule):
       k_h = tf.reshape(K_h, [-1, self.num_heads, self.latent_size])
       v_h = tf.reshape(V_h, [-1, self.num_heads, self.latent_size])
       pro_e = tf.reshape(proj_e, [-1, self.num_heads, self.latent_size])
-      
-      print("ATED EDGE " , pro_e)
-      print("ATED HE" , q_h)
+
       e_out, wV, score = self.propagate_attention(k_h, q_h, v_h, pro_e)
       
-      h_out = wV / (score + tf.fill(tf.shape(score), 1e-6)) # adding eps to all values here
+      #h_out = wV / (score + tf.fill(tf.shape(score), 1e-6)) # adding eps to all values here
       
-      print("ATTENTION HEAD: ", h_out)
-      print("ATTENTION EDGE: ", e_out)
-      return h_out, e_out
+      return wV, e_out
 
 
 class GraphTransformerLayer(snt.AbstractModule):
   def __init__(self, output_size, latent_size, num_heads=4, dropout=0.0, 
                 layer_norm=False, batch_norm=True, 
-                residual=True, use_bias=False, is_training=False, name='GraphTransformerLayer'):
+                residual=True, use_bias=False, is_training=True, name='GraphTransformerLayer'):
     super(GraphTransformerLayer, self).__init__(name=name)
     self.output_size = output_size
     self.latent_size = latent_size
@@ -119,11 +115,9 @@ class GraphTransformerLayer(snt.AbstractModule):
     return network
 
   def _update_edge_features(self, node_features, edge_set):
-    """Aggregrates node features, and applies edge function."""
     sender_features = tf.gather(node_features, edge_set.senders)
     receiver_features = tf.gather(node_features, edge_set.receivers)
     features = [sender_features, receiver_features, edge_set.features]
-    print(f'FEATIRES: {tf.concat(features, axis=-1)}')
     with tf.variable_scope(edge_set.name+'_edge_fn'):
       return self._make_linear(self.latent_size)(tf.concat(features, axis=-1))
 
@@ -142,6 +136,7 @@ class GraphTransformerLayer(snt.AbstractModule):
     e = self._transform_edge(graph.node_features, graph.edge_sets)
 
     h_att, e_att = MultiHeadAttentionLayer(self.output_size, self.latent_size//self.num_heads, self.num_heads, self.bias)(h, e)
+
     h = tf.reshape(h_att, [-1, self.latent_size])
     e = tf.reshape(e_att, [-1, self.latent_size])
 
@@ -171,8 +166,8 @@ class GraphTransformerLayer(snt.AbstractModule):
     h2 = h
     e2 = new_edge_sets
 
-    h = self._make_mlp([self.latent_size*2, self.latent_size])(h)
-    new_edge_sets = [es._replace(features=self._make_mlp([self.latent_size*2, self.latent_size])(es.features))
+    h = self._make_mlp([self.latent_size*2, self.latent_size*2, self.latent_size])(h)
+    new_edge_sets = [es._replace(features=self._make_mlp([self.latent_size*2, self.latent_size*2, self.latent_size])(es.features))
                      for es in new_edge_sets]
 
     if self.residual:
@@ -205,7 +200,7 @@ class EncodeProcessDecode(snt.AbstractModule):
                is_training=False,
                name='EncodeProcessDecode'):
     super(EncodeProcessDecode, self).__init__(name=name)
-    self._latent_size = latent_size
+    self.latent_size = latent_size
     self._output_size = output_size
     self._num_layers = num_layers
     self._message_passing_steps = message_passing_steps
@@ -227,28 +222,24 @@ class EncodeProcessDecode(snt.AbstractModule):
     """Encodes node and edge features into latent features."""
     with tf.variable_scope('encoder'):
         #h = snt.Embed(vocab_size=9, embed_dim=self._latent_size)(graph.node_features)  
-        h = self._make_linear(self._latent_size)(graph.node_features)
+        #h = self._make_linear(self._latent_size)(graph.node_features)
+        h = self._make_mlp([self.latent_size, self.latent_size])(graph.node_features)
         new_edges_sets = []
         for edge_set in graph.edge_sets:
-            latent = self._make_linear(self._latent_size)(edge_set.features)
+            #latent = self._make_linear(self._latent_size)(edge_set.features)
+            latent = self._make_mlp([self.latent_size, self.latent_size])(edge_set.features)
             new_edges_sets.append(edge_set._replace(features=latent))
-            print("AFTER EDGE SHAPE: ", latent)
-        print("HEAD SHAPE: ", h)
         latentgraph = MultiGraph(h, new_edges_sets)
         for conv in range(self._num_layers):
-            latentgraph = GraphTransformerLayer(self._output_size, self._latent_size, use_bias=self.bias, is_training=self.is_training)(latentgraph)
-        print(f'ITER: {conv} : {latentgraph}')
+            latentgraph = GraphTransformerLayer(self._output_size, self.latent_size, use_bias=self.bias, is_training=self.is_training)(latentgraph)
         return latentgraph
 
   def _decoder(self, graph):
     """Decodes node features from graph."""
     with tf.variable_scope('decoder'):
-      decoder = self._make_mlp([self._latent_size, self._latent_size, self._output_size], layer_norm=False)
+      decoder = self._make_mlp([self.latent_size, self.latent_size, self.latent_size, self._output_size], layer_norm=False)
       return decoder(graph.node_features)
 
   def _build(self, graph):
     latent_graph = self._encoder(graph)
-    print("working")
-    ret = self._decoder(latent_graph)
-    print(ret)
-    return ret
+    return self._decoder(latent_graph)

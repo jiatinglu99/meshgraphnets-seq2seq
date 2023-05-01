@@ -32,7 +32,7 @@ Refer to the respective `cfd_*` and `cloth_*` files for details.
 Prepare environment, install dependencies:
 
     virtualenv --python=python3.6 "${ENV}"
-    ${ENV}/bin/activate
+    source ${ENV}/bin/activate
     pip install -r meshgraphnets/requirements.txt
 
 Download a dataset:
