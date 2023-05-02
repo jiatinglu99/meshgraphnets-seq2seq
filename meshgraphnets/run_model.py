@@ -50,10 +50,9 @@ PARAMETERS = {
                   size=3, batch=1, model=cloth_model, evaluator=cloth_eval)
 }
 
-LOSS = []
-
 def learner(model, params):
   """Run a learner job."""
+  LOSS = []
   ds = dataset.load_dataset(FLAGS.dataset_dir, 'train')
   ds = dataset.add_targets(ds, [params['field']], add_history=params['history'])
   ds = dataset.split_and_preprocess(ds, noise_field=params['field'],
