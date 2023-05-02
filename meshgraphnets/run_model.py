@@ -50,6 +50,7 @@ PARAMETERS = {
                   size=3, batch=1, model=cloth_model, evaluator=cloth_eval)
 }
 
+LOSS = []
 
 def learner(model, params):
   """Run a learner job."""
@@ -73,6 +74,11 @@ def learner(model, params):
                      lambda: tf.group(tf.assign_add(global_step, 1)),
                      lambda: tf.group(train_op))
 
+  # Setup the loss file for recording losses
+  loss_filename = FLAGS.dataset_dir + "/loss.txt"
+  loss_file = open(loss_filename, "a")
+  loss_file.write("============ NEW TRAINING SESSION ============\n")
+
   with tf.train.MonitoredTrainingSession(
       hooks=[tf.train.StopAtStepHook(last_step=FLAGS.num_training_steps)],
       checkpoint_dir=FLAGS.checkpoint_dir,
@@ -82,6 +88,14 @@ def learner(model, params):
       _, step, loss = sess.run([train_op, global_step, loss_op])
       if step % 1000 == 0:
         logging.info('Step %d: Loss %g', step, loss)
+        for l in LOSS:
+            loss_file.write(str(l) + "\n")
+
+        LOSS = []
+      
+      if step % 100 == 0:
+        LOSS.append(loss)
+
     logging.info('Training complete.')
 
 
