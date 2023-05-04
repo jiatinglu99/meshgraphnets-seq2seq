@@ -1,32 +1,3 @@
-# Learning Mesh-Based Simulation with Graph Networks (ICLR 2021)
-
-Video site: [sites.google.com/view/meshgraphnets](https://sites.google.com/view/meshgraphnets)
-
-Paper: [arxiv.org/abs/2010.03409](https://arxiv.org/abs/2010.03409)
-
-If you use the code here please cite this paper:
-
-    @inproceedings{pfaff2021learning,
-      title={Learning Mesh-Based Simulation with Graph Networks},
-      author={Tobias Pfaff and
-              Meire Fortunato and
-              Alvaro Sanchez-Gonzalez and
-              Peter W. Battaglia},
-      booktitle={International Conference on Learning Representations},
-      year={2021}
-    }
-
-## Overview
-
-This release contains the full datasets used in the paper, as well as data
-loaders (dataset.py), and the learned model core (core_model.py).
-These components are designed to work with all of our domains.
-
-We also include demonstration code for a full training and evaluation pipeline,
-for the `cylinder_flow` and `flag_simple` domains only. This
-includes graph encoding, evaluation, rollout and plotting trajectory.
-Refer to the respective `cfd_*` and `cloth_*` files for details.
-
 ## Setup
 
 Prepare environment, install dependencies:
